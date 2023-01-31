@@ -5,7 +5,7 @@ services:
     ports:
       - "4566:4566"
     environment:
-      - SERVICES=lambda
+      - SERVICES=lambda, api-gateway
       - DEBUG=1
       - DATA_DIR=/tmp/localstack/data
     volumes:
