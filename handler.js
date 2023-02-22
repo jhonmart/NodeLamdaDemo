@@ -1,18 +1,41 @@
-'use strict';
+"use strict";
 
-module.exports.hello = async (event) => {
-  return {
-    statusCode: 200,
-    body: JSON.stringify(
-      {
-        message: 'Hello v1.0! Your function executed successfully!',
-        input: event,
-      },
-      null,
-      2
-    ),
-  };
+const requestNode = (event) =>
+  new Promise((resolve, reject) => {
+    const http = require("http");
+    let responseBody = "";
+    const req = http.request(event, (res) => {
+      res.setEncoding("utf8");
+      console.log(`statusCode: ${res.statusCode}`);
+      res.on("data", (chunk) => {
+        responseBody += chunk;
+      });
 
-  // Use this code if you don't use the http event with the LAMBDA-PROXY integration
-  // return { message: 'Go Serverless v1.0! Your function executed successfully!', event };
+      res.on("end", () => {
+        resolve({
+          statusCode: 200,
+          body: responseBody,
+        });
+      });
+
+      res.on("error", (error) => {
+        reject({
+          statusCode: 500,
+          body: JSON.stringify(
+            {
+              message: "Falha interna",
+              error,
+            },
+            null,
+            2
+          ),
+        });
+      });
+    });
+    event.body && req.write(JSON.stringify(event.body));
+    req.end();
+  });
+
+module.exports.request = async (event, context) => {
+  return await requestNode(event);
 };
